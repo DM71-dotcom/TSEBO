@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tsebo: Grade 9 study search</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FCFCF8; --sheet:#FFFFFF; --ink:#1D2B24; --muted:#56655D;
+  --rule:#DCE7F0; --margin:#E9A1A1; --green:#1E6B4F; --green-ink:#FFFFFF;
+  --green-soft:#E3F0EA; --hi:#FFE15A; --hi-ink:#1D2B24; --line:#D7DDD6; --soft:#F2F5F1;
+  --danger:#A3341F;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", Roboto, Arial, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121815; --sheet:#18201C; --ink:#E6ECE8; --muted:#A1AFA8;
+    --rule:#223039; --margin:#6E3B3B; --green:#6CC9A1; --green-ink:#0E1A14;
+    --green-soft:#1D3229; --hi:#E8C730; --hi-ink:#17170F; --line:#2D3933; --soft:#1D2622;
+    --danger:#F08A73;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121815; --sheet:#18201C; --ink:#E6ECE8; --muted:#A1AFA8;
+  --rule:#223039; --margin:#6E3B3B; --green:#6CC9A1; --green-ink:#0E1A14;
+  --green-soft:#1D3229; --hi:#E8C730; --hi-ink:#17170F; --line:#2D3933; --soft:#1D2622;
+  --danger:#F08A73;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:1.0625rem;line-height:1.55}
+img{max-width:100%}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--green);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 1rem}
+
+/* Top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.9rem 0 .6rem;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap}
+.brand b{font-family:var(--display);font-weight:800;font-size:1.7rem;letter-spacing:-.02em}
+.brand span{color:var(--muted);font-size:.95rem}
+.lang{display:flex;align-items:center;gap:.4rem;font-size:.95rem;color:var(--muted)}
+.lang select{background:var(--sheet);border:1.5px solid var(--line);border-radius:8px;padding:.35rem .5rem;color:var(--ink)}
+
+.tabs{display:flex;gap:.25rem;border-bottom:1.5px solid var(--line);margin-bottom:1.25rem}
+.tab{background:none;border:0;padding:.6rem .9rem;cursor:pointer;color:var(--muted);font-weight:700;border-bottom:3px solid transparent;margin-bottom:-1.5px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--green)}
+
+/* Exercise-book hero */
+.book{
+  position:relative;background-color:var(--sheet);border:1.5px solid var(--line);border-radius:6px;
+  padding:1.6rem 1.25rem 1.4rem 4rem;
+  background-image:
+    linear-gradient(to right, transparent 2.75rem, var(--margin) 2.75rem, var(--margin) calc(2.75rem + 2px), transparent calc(2.75rem + 2px)),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 2.05rem, var(--rule) 2.05rem, var(--rule) calc(2.05rem + 1px));
+  background-position:0 .2rem;
+}
+.book h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,6.4vw,3.5rem);line-height:1.02;letter-spacing:-.03em;margin:0 0 .35rem;max-width:16ch}
+.book .sub{margin:0 0 1.2rem;color:var(--muted);max-width:56ch}
+.search{display:flex;gap:.5rem;flex-wrap:wrap}
+.search input{flex:1 1 16rem;min-width:0;font-size:1.15rem;padding:.8rem 1rem;border:2px solid var(--ink);border-radius:10px;background:var(--sheet)}
+.search input:focus{outline:none;box-shadow:0 0 0 4px var(--hi)}
+.btn{border:0;border-radius:10px;padding:.8rem 1.2rem;font-weight:700;cursor:pointer;background:var(--green);color:var(--green-ink)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);padding:.55rem .9rem;font-weight:700}
+.btn.ghost:hover{border-color:var(--green)}
+.chips{display:flex;gap:.4rem;overflow-x:auto;padding:.9rem 0 .2rem;scrollbar-width:thin}
+.chip{flex:0 0 auto;border:1.5px solid var(--line);background:var(--sheet);border-radius:999px;padding:.3rem .8rem;cursor:pointer;font-size:.95rem;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.tries{display:flex;flex-wrap:wrap;gap:.35rem .9rem;margin-top:.7rem;font-size:.97rem;color:var(--muted)}
+.tries button{background:none;border:0;padding:0;cursor:pointer;color:var(--green);text-decoration:underline;text-underline-offset:3px;font-weight:700}
+
+/* Results */
+.results{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:1.5rem;margin-top:1.5rem;align-items:start}
+@media (max-width:820px){.results{grid-template-columns:1fr}}
+.answer{background:var(--sheet);border:1.5px solid var(--line);border-radius:6px;padding:1.4rem 1.4rem 1.6rem 2.1rem;position:relative;min-width:0}
+.answer::before{content:"";position:absolute;left:1.05rem;top:0;bottom:0;width:2px;background:var(--margin)}
+.asked{margin:0 0 .5rem;color:var(--muted);font-size:.95rem}
+mark.swipe{color:var(--hi-ink);padding:0 .2em;background:linear-gradient(100deg,transparent .2em,var(--hi) .2em,var(--hi) calc(100% - .1em),transparent calc(100% - .1em)) no-repeat 0 0/100% 100%;font-weight:700;border-radius:2px}
+@media (prefers-reduced-motion:no-preference){
+  mark.swipe{animation:swipe .55s ease-out both}
+  @keyframes swipe{from{background-size:0 100%}to{background-size:100% 100%}}
+}
+.answer h2{font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,4vw,2.1rem);line-height:1.1;letter-spacing:-.02em;margin:.1rem 0 .4rem}
+.meta{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1rem}
+.tag{font-size:.88rem;background:var(--green-soft);color:var(--ink);border-radius:6px;padding:.15rem .5rem}
+.body p{margin:.0 0 .85rem;max-width:68ch}
+.body ul{margin:0 0 .85rem;padding-left:1.25rem;max-width:66ch}
+.body li{margin:.2rem 0}
+.answer h3{font-family:var(--display);font-weight:800;font-size:1.2rem;margin:1.4rem 0 .5rem;letter-spacing:-.01em}
+dl.kw{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:.35rem 1rem}
+dl.kw dt{font-weight:700}
+dl.kw dd{margin:0;color:var(--ink)}
+@media (max-width:520px){dl.kw{grid-template-columns:1fr}dl.kw dd{margin-bottom:.4rem}}
+.example{background:var(--soft);border-radius:8px;padding:.8rem 1rem}
+.example p:last-child{margin-bottom:0}
+.thinking{color:var(--muted);font-style:italic}
+@media (prefers-reduced-motion:no-preference){.thinking::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}}
+.note{font-size:.95rem;color:var(--muted);border-left:3px solid var(--hi);padding:.3rem 0 .3rem .7rem;margin:.8rem 0}
+.note.err{border-left-color:var(--danger);color:var(--ink)}
+
+/* Exam paper */
+.paper{border-top:2px solid var(--ink);margin-top:.4rem}
+.qsec{padding-top:.6rem}
+.qsec-h{display:flex;justify-content:space-between;font-weight:700;margin:.3rem 0 .4rem}
+.q{border-bottom:1px dashed var(--line);padding:.55rem 0}
+.q-row{display:grid;grid-template-columns:2.6rem minmax(0,1fr) auto;gap:.5rem;align-items:start}
+.q-num{font-weight:700}
+.q-text{white-space:pre-wrap}
+.q-marks{font-weight:700;white-space:nowrap}
+.memo-btn{margin:.4rem 0 0 3.1rem;background:none;border:0;padding:0;color:var(--green);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-size:.95rem}
+.memo{margin:.45rem 0 .2rem 3.1rem;background:var(--soft);border-radius:8px;padding:.6rem .8rem;white-space:pre-wrap}
+.memo b.mlabel{display:block;font-size:.85rem;color:var(--muted)}
+.total{text-align:right;font-weight:700;padding:.4rem 0 0}
+.actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.2rem}
+
+/* Aside */
+.side h2{font-family:var(--display);font-weight:800;font-size:1.15rem;margin:.2rem 0 .6rem}
+.tlist{list-style:none;margin:0;padding:0}
+.tlist li{border-top:1px solid var(--line)}
+.tlist button{display:block;width:100%;text-align:left;background:none;border:0;padding:.65rem .1rem;cursor:pointer}
+.tlist button:hover .t-title{text-decoration:underline}
+.t-title{font-weight:700;display:block}
+.t-sub{font-size:.88rem;color:var(--muted);display:block}
+.side .empty{color:var(--muted);font-size:.95rem}
+.recent{margin-top:1.4rem}
+
+/* Browse */
+.jump{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.subj{background:var(--sheet);border:1.5px solid var(--line);border-radius:6px;padding:1.1rem 1.25rem;margin-bottom:1rem}
+.subj > h2{font-family:var(--display);font-weight:800;font-size:1.6rem;letter-spacing:-.02em;margin:0}
+.subj > p{margin:.15rem 0 .6rem;color:var(--muted)}
+.grp h3{font-size:1rem;margin:1rem 0 .2rem;color:var(--green)}
+.topics{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0 1.25rem}
+.topics li{border-top:1px solid var(--line)}
+.topics button{display:block;width:100%;text-align:left;background:none;border:0;padding:.55rem 0;cursor:pointer}
+.topics button:hover .t-title{text-decoration:underline}
+details.practice{margin-top:1rem;border-top:2px solid var(--ink);padding-top:.6rem}
+details.practice summary{cursor:pointer;font-weight:700}
+
+footer{color:var(--muted);font-size:.9rem;padding:2rem 0 2.5rem;max-width:70ch}
+.hidden{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:520px){
+  .book{padding:1.3rem .9rem 1.1rem 2.6rem;background-image:linear-gradient(to right, transparent 1.7rem, var(--margin) 1.7rem, var(--margin) calc(1.7rem + 2px), transparent calc(1.7rem + 2px)),repeating-linear-gradient(to bottom, transparent 0, transparent 2.05rem, var(--rule) 2.05rem, var(--rule) calc(2.05rem + 1px))}
+  .answer{padding:1.1rem 1rem 1.3rem 1.6rem}
+  .answer::before{left:.75rem}
+  .q-row{grid-template-columns:2.3rem minmax(0,1fr) auto}
+  .memo-btn,.memo{margin-left:2.8rem}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><b>Tsebo</b><span>Grade 9 study search for Limpopo learners (CAPS)</span></div>
+    <label class="lang">Answer in
+      <select id="lang">
+        <option>English</option><option>Sepedi</option><option>Xitsonga</option><option>Tshivenda</option><option>Afrikaans</option>
+      </select>
+    </label>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-search" aria-selected="true" aria-controls="view-search">Search</button>
+    <button class="tab" role="tab" id="tab-browse" aria-selected="false" aria-controls="view-browse">Browse curriculum</button>
+  </div>
+
+  <main>
+    <section id="view-search" role="tabpanel" aria-labelledby="tab-search">
+      <div class="book">
+        <h1>Ask anything from Grade 9.</h1>
+        <p class="sub">Type a word, topic or question. You get a clear explanation, key words, an example and exam questions with answers.</p>
+        <form class="search" id="searchForm" role="search">
+          <label for="q" class="sr">Search</label>
+          <input id="q" type="search" autocomplete="off" placeholder="e.g. What is Google?  or  Pythagoras">
+          <button class="btn" type="submit" id="goBtn">Search</button>
+        </form>
+        <div class="chips" id="chips" aria-label="Subject"></div>
+        <div class="tries" id="tries"><span>Try:</span></div>
+      </div>
+
+      <div class="results hidden" id="results">
+        <article class="answer" id="answer" aria-busy="false">
+          <p class="asked" id="asked"></p>
+          <h2 id="ansTitle"></h2>
+          <div class="meta" id="ansMeta"></div>
+          <div class="body" id="ansBody"></div>
+          <div id="ansExamWrap" class="hidden">
+            <h3>Exam questions</h3>
+            <div class="paper" id="ansExam"></div>
+          </div>
+          <div id="status" role="status" aria-live="polite"></div>
+          <div class="actions" id="actions"></div>
+        </article>
+        <aside class="side">
+          <h2>In your curriculum</h2>
+          <ul class="tlist" id="matches"></ul>
+          <div class="recent hidden" id="recentWrap">
+            <h2>Recent searches</h2>
+            <ul class="tlist" id="recent"></ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="view-browse" role="tabpanel" aria-labelledby="tab-browse" class="hidden">
+      <div class="jump" id="jump"></div>
+      <div id="subjects"></div>
+    </section>
+  </main>
+
+  <footer>
+    Explanations and exam questions are written by Claude and can contain mistakes. Check important facts in your textbook or with your teacher. Topics follow the CAPS Grade 9 curriculum used in Limpopo schools.
+  </footer>
+</div>
+
+<script>
+/* ---------- Curriculum (CAPS Grade 9) ---------- */
+const SUBJECTS = [
+ {id:"maths", name:"Mathematics", short:"Maths", groups:[
+  {label:"Term 1", topics:[
+   ["Whole numbers","Properties of numbers, multiples, factors, prime factors, HCF and LCM, and calculating with large numbers.","hcf lcm prime"],
+   ["Ratio, rate and proportion","Comparing quantities, sharing in a ratio, speed and distance, and direct and indirect proportion.","speed share"],
+   ["Financial maths","Profit, loss, discount, VAT, simple and compound interest, hire purchase, exchange rates and commission.","money interest vat rand budget loan"],
+   ["Integers","Calculating with positive and negative numbers, including squares, cubes and roots.","negative"],
+   ["Fractions, decimals and percentages","Calculating with common fractions, decimal fractions and percentages, and converting between them.","fraction decimal percent"],
+   ["Exponents","Laws of exponents, negative exponents, and writing very big or very small numbers in scientific notation.","powers index scientific notation"],
+   ["Numeric and geometric patterns","Finding the rule of a pattern and using it to work out any term.","sequence term rule"],
+   ["Algebraic expressions","Like terms, expanding brackets, multiplying binomials and factorising (common factor, difference of two squares, trinomials).","factorise expand simplify"],
+   ["Algebraic equations","Solving linear equations, equations with fractions and brackets, and products equal to zero.","solve for x"]]},
+  {label:"Term 2", topics:[
+   ["Construction of geometric figures","Using a compass, ruler and protractor to bisect lines and angles and construct triangles and quadrilaterals.","compass protractor bisect"],
+   ["Geometry of 2D shapes","Properties of triangles and quadrilaterals, and when triangles are congruent or similar.","congruent similar triangle quadrilateral"],
+   ["Geometry of straight lines","Angle relationships: vertically opposite, corresponding, alternate and co-interior angles on parallel lines.","angles parallel"]]},
+  {label:"Term 3", topics:[
+   ["Functions and relationships","Describing relationships between variables using flow diagrams, tables, formulae and equations.","input output"],
+   ["Graphs","Drawing and interpreting straight-line graphs, gradient, x- and y-intercepts, and reading global graphs.","linear gradient intercept"],
+   ["Theorem of Pythagoras","In a right-angled triangle, the square on the hypotenuse equals the sum of the squares on the other two sides.","hypotenuse right angle"],
+   ["Area and perimeter of 2D shapes","Perimeter and area of squares, rectangles, triangles, circles and composite shapes, and converting units.","circle circumference"],
+   ["Surface area and volume","Surface area, volume and capacity of prisms and cylinders.","capacity prism cylinder"]]},
+  {label:"Term 4", topics:[
+   ["Transformation geometry","Translations, reflections, rotations and enlargements on the Cartesian plane.","reflect rotate translate enlarge"],
+   ["Geometry of 3D objects","Properties of polyhedra, prisms, cylinders, pyramids and spheres, and their nets.","faces edges vertices"],
+   ["Data handling","Collecting, organising and representing data; mean, median, mode and range; reading graphs critically.","statistics average graph"],
+   ["Probability","Possible outcomes, relative frequency, and the probability of simple and compound events.","chance outcome"]]}
+ ]},
+ {id:"ns", name:"Natural Sciences", short:"NS", groups:[
+  {label:"Term 1: Life and living", topics:[
+   ["Cells as the basic units of life","Plant and animal cells, organelles, and how cells form tissues, organs and systems.","cell nucleus organelle tissue"],
+   ["Systems in the human body","How the digestive, circulatory, respiratory, excretory, nervous and skeletal systems work together.","organs body"],
+   ["Human reproduction","Puberty, reproductive organs, the menstrual cycle, fertilisation, pregnancy and contraception.","puberty pregnancy"],
+   ["Circulatory and respiratory systems","The heart, blood vessels and lungs, and how oxygen and carbon dioxide are exchanged.","heart blood lungs breathing"],
+   ["Digestive system","How food is broken down mechanically and chemically, absorbed into the blood and egested.","digestion enzymes stomach"]]},
+  {label:"Term 2: Matter and materials", topics:[
+   ["Compounds","Elements, mixtures and compounds, and naming compounds using chemical formulae.","element formula"],
+   ["Chemical reactions","Reactants and products, word equations, balanced equations and conservation of mass.","equation reactant product"],
+   ["Reactions of metals with oxygen","Metals burn or rust to form metal oxides, for example iron + oxygen gives iron oxide.","rust oxide"],
+   ["Reactions of non-metals with oxygen","Carbon and sulfur burn in oxygen to form gases, some of which cause acid rain.","acid rain carbon dioxide"],
+   ["Acids, bases and pH","Indicators, the pH scale, and neutralisation, where an acid and a base form a salt and water.","indicator neutral litmus"],
+   ["Reactions of acids with bases","Acids react with metal oxides, hydroxides and carbonates to form a salt and water (plus carbon dioxide with carbonates).","neutralisation carbonate"],
+   ["Reactions of acids with metals","Acid + metal gives a salt + hydrogen gas, tested with the pop test.","hydrogen pop test"]]},
+  {label:"Term 3: Energy and change", topics:[
+   ["Forces","Contact and non-contact forces such as friction, magnetic, electrostatic and gravitational forces.","friction gravity magnet"],
+   ["Electric cells as energy systems","How a cell changes chemical energy into electrical energy.","battery"],
+   ["Resistance","What resistance is, what affects it, and how resistors are used in circuits.","ohm resistor"],
+   ["Series and parallel circuits","How current and voltage behave when components are connected in series or in parallel.","current voltage ammeter voltmeter"],
+   ["Safety with electricity","Fuses, circuit breakers, earth wires, and avoiding overloaded plugs and illegal connections.","fuse shock"],
+   ["Energy and the national grid","How power stations (coal, nuclear, hydro, solar, wind) generate electricity and how it reaches homes.","eskom power station"],
+   ["Cost of electrical power","Calculating power in watts and kilowatts and the cost of energy used in kilowatt-hours.","kwh watt electricity bill"]]},
+  {label:"Term 4: Planet Earth and beyond", topics:[
+   ["The Earth as a system","How the lithosphere, hydrosphere, atmosphere and biosphere interact.","spheres"],
+   ["The lithosphere and rock cycle","Igneous, sedimentary and metamorphic rock and how one type changes into another.","rocks"],
+   ["Mining of mineral resources","How minerals like platinum, coal and gold are mined in South Africa and how mining affects the environment.","mine platinum gold"],
+   ["The atmosphere","Layers of the atmosphere, the greenhouse effect and global warming.","troposphere greenhouse climate"],
+   ["Birth, life and death of stars","How stars form in nebulae and end as white dwarfs, neutron stars or black holes.","star sun nebula"],
+   ["Beyond the solar system","Galaxies, the Milky Way and measuring distance in light-years.","galaxy universe"],
+   ["Looking into space","Telescopes, space exploration and South African projects like SALT and the SKA.","telescope space"]]}
+ ]},
+ {id:"ss", name:"Social Sciences", short:"SS", groups:[
+  {label:"History, Term 1: World War II (1939 to 1945)", topics:[
+   ["Causes of World War II","The Treaty of Versailles, the rise of Hitler and the Nazis, appeasement and the invasion of Poland.","hitler nazi ww2"],
+   ["The Holocaust","The Nazi persecution and murder of six million Jews and other groups.","genocide"],
+   ["The war in Europe and the Pacific","Key events such as Pearl Harbor, D-Day and the atomic bombs on Hiroshima and Nagasaki.","ww2 battles"]]},
+  {label:"History, Term 2: The nuclear age and the Cold War", topics:[
+   ["The Cold War","Tension between the USA and USSR from 1945 to 1990: the arms race, the Berlin Wall and the Cuban Missile Crisis.","usa ussr"],
+   ["The nuclear age","How nuclear weapons were developed and why the world feared nuclear war.","atomic bomb"]]},
+  {label:"History, Term 3: Turning points, 1948 and the 1950s", topics:[
+   ["Apartheid laws","The 1948 National Party victory and laws like the Population Registration Act, Group Areas Act and Bantu Education Act.","apartheid segregation"],
+   ["Resistance in the 1950s","The Defiance Campaign (1952), the Freedom Charter (1955), the Women's March (1956) and the Treason Trial.","anc freedom charter"]]},
+  {label:"History, Term 4: Turning points, 1960, 1976 and 1990", topics:[
+   ["Sharpeville 1960","Police shot dead 69 people protesting against pass laws, and the ANC and PAC were banned.","pass laws massacre"],
+   ["Soweto Uprising 1976","On 16 June 1976 learners protested against Afrikaans as a language of teaching.","june 16 youth day"],
+   ["1990 and the road to democracy","Unbanning of liberation movements, Mandela's release, negotiations and the 1994 election.","mandela democracy election"]]},
+  {label:"Geography", topics:[
+   ["Map skills","Scale, grid references, direction, contour lines and reading topographic and orthophoto maps.","maps scale contour"],
+   ["Development issues","Measuring development (GDP, HDI) and why some places are more developed than others.","poverty gdp hdi"],
+   ["Resource use and sustainability","Natural resources, how people use them, and using water and soil sustainably.","conservation water soil"],
+   ["Surface forces that shape the Earth","Weathering, erosion, mass movement and how rivers shape landforms.","erosion weathering river"]]}
+ ]},
+ {id:"ems", name:"Economic and Management Sciences", short:"EMS", groups:[
+  {label:"The economy", topics:[
+   ["Economic systems","Market, command and mixed economies, and how South Africa's mixed economy works.","capitalism socialism"],
+   ["The circular flow","How money, goods and services flow between households, businesses and government.","households"],
+   ["Demand and supply (price theory)","How demand and supply set prices in a market.","price market"],
+   ["Trade unions","The role of trade unions, collective bargaining and workers' rights.","workers strike cosatu"]]},
+  {label:"Entrepreneurship", topics:[
+   ["Sectors of the economy","Primary, secondary and tertiary sectors and how they depend on each other.","primary secondary tertiary"],
+   ["Forms of ownership","Sole trader, partnership, private company and non-profit company: advantages and disadvantages.","sole trader partnership company"],
+   ["Functions of a business","General management, production, marketing, finance, purchasing, human resources, administration and public relations.","marketing"],
+   ["Business plan","Planning a small business: product, market research, costs, selling price and profit.","entrepreneur"]]},
+  {label:"Financial literacy", topics:[
+   ["Accounting concepts","Assets, liabilities, owner's equity, income and expenses, and the accounting equation.","asset liability equity"],
+   ["Source documents","Receipts, cash invoices, cheque counterfoils, invoices and credit notes.","invoice receipt"],
+   ["Cash journals (CRJ and CPJ)","Recording cash received in the Cash Receipts Journal and cash paid in the Cash Payments Journal.","crj cpj journal"],
+   ["Debtors and creditors journals","Recording credit sales in the Debtors Journal and credit purchases in the Creditors Journal.","dj cj credit"],
+   ["General ledger and trial balance","Posting journals to ledger accounts and checking that debits equal credits.","ledger debit credit"]]}
+ ]},
+ {id:"tech", name:"Technology", short:"Tech", groups:[
+  {label:"Topics", topics:[
+   ["The design process","Investigate, design, make, evaluate and communicate to solve a real problem.","idmec design brief"],
+   ["Structures","Frame, shell and solid structures, forces acting on structures, and how to make them stronger.","frame shell triangulation"],
+   ["Mechanical systems and control","Levers, gears, pulleys, linkages, and hydraulic and pneumatic systems.","lever gear hydraulics pneumatics"],
+   ["Electrical systems and control","Circuits, resistors and colour codes, Ohm's law, and logic gates (AND, OR, NOT).","logic gates resistor"],
+   ["Processing","Preserving materials and food, and the properties of materials like plastics.","preservation plastics"],
+   ["Graphical communication","Isometric, oblique, orthographic (first-angle) and perspective drawings.","drawing projection"]]}
+ ]},
+ {id:"lo", name:"Life Orientation", short:"LO", groups:[
+  {label:"Development of self in society", topics:[
+   ["Self-concept and goals","Building a positive self-image, setting goals and making good decisions.","self esteem goals"],
+   ["Relationships and peer pressure","Healthy friendships, handling peer pressure and resolving conflict.","friends conflict"],
+   ["Sexuality and teenage pregnancy","Responsible choices, the consequences of teenage pregnancy and where to get help.","pregnancy"]]},
+  {label:"Health, social and environmental responsibility", topics:[
+   ["Substance abuse","Effects of alcohol, tobacco and drugs, ways to say no, and where to get help.","drugs alcohol"],
+   ["Community and environmental health","Health issues like HIV and AIDS, and caring for the environment.","hiv aids pollution"]]},
+  {label:"Constitutional rights and responsibilities", topics:[
+   ["Human rights and the Bill of Rights","The Bill of Rights, human rights violations, and the responsibilities that go with rights.","constitution rights"],
+   ["Diversity and discrimination","Respecting cultural and religious diversity and challenging discrimination.","racism xenophobia culture"]]},
+  {label:"World of work", topics:[
+   ["Choosing Grade 10 subjects","Matching subject choices to your interests, abilities and career goals.","subject choice stream"],
+   ["Careers and study funding","Career fields, NSC requirements, bursaries and NSFAS.","career bursary nsfas"],
+   ["Study skills","Study methods, time management and preparing for exams.","exam study"]]},
+  {label:"Physical education", topics:[
+   ["Physical education","Fitness, games and staying safe during physical activity.","fitness sport"]]}
+ ]},
+ {id:"eng", name:"English", short:"English", groups:[
+  {label:"Reading and viewing", topics:[
+   ["Comprehension","Reading a text and answering literal, inferential and critical questions.","reading"],
+   ["Summary writing","Choosing the main points and writing them in your own words within a word limit.","summarise"],
+   ["Visual literacy","Analysing cartoons, advertisements and pictures: message, techniques and audience.","advert cartoon"],
+   ["Novel and drama","Plot, setting, characters, themes, conflict and dramatic irony.","literature play"],
+   ["Poetry","Imagery, rhyme, rhythm, tone and theme in poems.","poem"],
+   ["Figures of speech","Simile, metaphor, personification, alliteration, onomatopoeia, hyperbole and irony.","simile metaphor personification"]]},
+  {label:"Writing and presenting", topics:[
+   ["Essay writing","Narrative, descriptive, argumentative and discursive essays: planning, drafting and editing.","essay"],
+   ["Transactional writing","Formal and friendly letters, emails, CVs, reports, speeches, diary entries and invitations.","letter cv email"]]},
+  {label:"Language structures", topics:[
+   ["Parts of speech","Nouns, pronouns, verbs, adjectives, adverbs, prepositions and conjunctions.","noun verb adjective"],
+   ["Tenses and concord","Past, present and future tenses, and subject-verb agreement.","grammar"],
+   ["Active and passive voice","Changing a sentence so the focus moves from who does the action to who receives it.","passive"],
+   ["Direct and reported speech","Changing spoken words into reported speech with the correct tense and pronouns.","indirect speech"],
+   ["Punctuation","Commas, apostrophes, colons, semicolons and inverted commas.","comma apostrophe"]]},
+  {label:"Listening and speaking", topics:[
+   ["Speeches, debates and interviews","Preparing and presenting oral work and listening for meaning.","oral debate"]]}
+ ]},
+ {id:"lang", name:"Other languages", short:"Languages", groups:[
+  {label:"Choose a language in \u201cAnswer in\u201d to get answers in it", topics:[
+   ["Afrikaans (First Additional Language)","Comprehension, summary, literature, language structures and writing in Afrikaans.","afrikaans"],
+   ["Sepedi (Home Language)","Comprehension, literature (poetry, novel, drama, folklore), grammar and writing in Sepedi.","sepedi northern sotho"],
+   ["Xitsonga (Home Language)","Comprehension, literature (poetry, novel, drama, folklore), grammar and writing in Xitsonga.","xitsonga tsonga"],
+   ["Tshivenda (Home Language)","Comprehension, literature (poetry, novel, drama, folklore), grammar and writing in Tshivenda.","tshivenda venda"]]}
+ ]},
+ {id:"ca", name:"Creative Arts", short:"Creative Arts", groups:[
+  {label:"Music", topics:[
+   ["Music notation and theory","Time signatures, note values, scales, key signatures and reading music.","notes rhythm"],
+   ["Music performance and listening","Singing, playing and listening to South African and world music.","song"]]},
+  {label:"Visual arts", topics:[
+   ["Elements and principles of art","Line, shape, colour, texture and space; balance, contrast, emphasis and rhythm.","colour design"],
+   ["Art making and South African artists","Drawing, painting and sculpture, and the work of South African artists.","drawing painting"]]},
+  {label:"Drama and dance", topics:[
+   ["Drama","Voice, movement, character, dramatic structure and theatre conventions.","acting theatre"],
+   ["Dance","Warm-ups, dance elements (body, space, time, energy), choreography and South African dance forms.","choreography"]]}
+ ]}
+];
+
+/* Built-in practice questions: [question, marks, memo] */
+const PRACTICE = {
+ maths:[
+  ["Simplify: (2x\u00b3)\u00b2 \u00d7 3x\u2074",3,"(2x\u00b3)\u00b2 = 4x\u2076\n4x\u2076 \u00d7 3x\u2074 = 12x\u00b9\u2070"],
+  ["Factorise fully: x\u00b2 \u2212 9",2,"(x \u2212 3)(x + 3)  (difference of two squares)"],
+  ["Solve for x: 3x \u2212 7 = 2x + 5",2,"3x \u2212 2x = 5 + 7\nx = 12"],
+  ["A right-angled triangle has sides of 6 cm and 8 cm next to the right angle. Calculate the length of the hypotenuse.",3,"c\u00b2 = 6\u00b2 + 8\u00b2 = 36 + 64 = 100\nc = \u221a100 = 10 cm"],
+  ["Write 0,000 47 in scientific notation.",2,"4,7 \u00d7 10\u207b\u2074"],
+  ["Calculate the simple interest on R5 000 invested at 8% per year for 3 years.",3,"SI = P \u00d7 i \u00d7 n = 5 000 \u00d7 0,08 \u00d7 3 = R1 200"]],
+ ns:[
+  ["Name the part of a plant cell where photosynthesis takes place.",1,"Chloroplast"],
+  ["Write a word equation for the reaction of magnesium with oxygen.",2,"magnesium + oxygen \u2192 magnesium oxide"],
+  ["What is the pH of a neutral solution such as pure water?",1,"7"],
+  ["Three 2 \u03a9 resistors are connected in series. Calculate the total resistance.",2,"R = 2 + 2 + 2 = 6 \u03a9"],
+  ["Name the layer of the atmosphere closest to the Earth's surface.",1,"Troposphere"],
+  ["State two functions of the human skeleton.",2,"Any two: support, protects organs, allows movement, makes blood cells, stores minerals"]],
+ ss:[
+  ["In which year did World War II start, and which event started it?",2,"1939; Germany invaded Poland"],
+  ["Explain what the Group Areas Act of 1950 did.",2,"It divided towns and cities into separate areas for different race groups, which led to forced removals."],
+  ["On which date did about 20 000 women march to the Union Buildings in Pretoria?",1,"9 August 1956"],
+  ["Explain what happened in Soweto on 16 June 1976.",3,"Learners marched against Afrikaans being used as a language of teaching. Police opened fire and learners, including Hector Pieterson, were killed. The uprising spread across the country."],
+  ["Define the term Cold War.",2,"A period of tension (1945 to 1990) between the USA and the USSR in which they did not fight each other directly."],
+  ["A map has a scale of 1 : 50 000. What distance on the ground does 1 cm on the map represent?",2,"50 000 cm = 500 m = 0,5 km"]],
+ ems:[
+  ["Name the source document issued when goods are sold on credit.",1,"Invoice"],
+  ["In which journal are all cash receipts recorded?",1,"Cash Receipts Journal (CRJ)"],
+  ["Name the three sectors of the economy and give one example of each.",6,"Primary: farming or mining\nSecondary: manufacturing, e.g. a bakery\nTertiary: services, e.g. banking or transport"],
+  ["Give two advantages of a sole trader.",2,"Any two: easy and cheap to start, owner keeps all the profit, quick decisions, owner has full control"],
+  ["What happens to the price of a product when demand increases and supply stays the same?",1,"The price increases."]],
+ tech:[
+  ["Name the three types of structures and give one example of each.",6,"Frame: electricity pylon\nShell: egg or car body\nSolid: dam wall"],
+  ["What is the output of an AND gate if one input is 1 and the other is 0?",1,"0"],
+  ["List the steps of the design process in the correct order.",5,"Investigate, design, make, evaluate, communicate"],
+  ["Hydraulic systems use ____ while pneumatic systems use ____.",2,"Liquid (oil or water); air (gas)"],
+  ["Explain mechanical advantage in a lever.",2,"Mechanical advantage = load \u00f7 effort. When it is more than 1, the lever lets a small effort move a bigger load."]],
+ lo:[
+  ["Define peer pressure and give one example of positive peer pressure.",2,"Influence from people your own age to act in a certain way. Positive example: friends encouraging you to study."],
+  ["Name three things to consider when choosing Grade 10 subjects.",3,"Any three: your interests, your abilities and marks, the career you want, entry requirements of colleges or universities"],
+  ["Name one right in the Bill of Rights and the responsibility that goes with it.",2,"Right to education; responsibility to attend school and respect others' learning (accept other valid pairs)"],
+  ["Give two short-term effects of alcohol on teenagers.",2,"Any two: poor judgement, poor coordination, risky behaviour, slow reactions"]],
+ eng:[
+  ["Identify the figure of speech: The wind whispered through the trees.",1,"Personification"],
+  ["Rewrite in the passive voice: The learners wrote the exam.",1,"The exam was written by the learners."],
+  ["Rewrite in reported speech: She said, \u201cI am tired.\u201d",2,"She said that she was tired."],
+  ["Give the antonym (opposite) of generous.",1,"Mean / selfish / stingy"],
+  ["Name three parts of a formal letter.",3,"Any three: sender's address, date, recipient's address, salutation, subject line, body, closing and signature"]],
+ lang:[],
+ ca:[
+  ["How many crotchet beats are there in one bar of 4/4 time?",1,"Four"],
+  ["Name three elements of art.",3,"Any three: line, shape, form, colour, texture, space, tone"],
+  ["Name the three primary colours.",3,"Red, yellow, blue"],
+  ["Why should dancers warm up before dancing?",2,"It prepares the muscles and raises the heart rate and blood flow, which helps prevent injury."]]
+};
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<em>$2</em>");
+function blocks(text){
+  const out=[]; let list=null;
+  for (const raw of text.split("\n")){
+    const line=raw.trim();
+    if(!line){ list=null; out.push(""); continue; }
+    const b=line.match(/^[-\u2022*]\s+(.*)$/);
+    if(b){ if(!list){ list=[]; out.push(list); } list.push(b[1]); continue; }
+    list=null;
+    if(typeof out[out.length-1]==="string" && out[out.length-1]) out[out.length-1]+=" "+line; else out.push(line);
+  }
+  return out.filter(x=>x!=="" ).map(x=>Array.isArray(x)?"<ul>"+x.map(i=>"<li>"+inline(i)+"</li>").join("")+"</ul>":"<p>"+inline(x)+"</p>").join("");
+}
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+
+const TOPICS = [];
+SUBJECTS.forEach(s=>s.groups.forEach(g=>g.topics.forEach(t=>TOPICS.push({sid:s.id, sname:s.name, group:g.label, title:t[0], summary:t[1], kw:t[2]||""}))));
+const STOP = new Set("what whats is are was the a an of to in on how do does did why who explain define definition meaning mean me about and for with tell give grade nine please can you i my it this that".split(" "));
+function tokens(s){ return s.toLowerCase().replace(/[^a-z0-9\u00c0-\u024f\s]/g," ").split(/\s+/).filter(w=>w.length>1 && !STOP.has(w)).map(w=>w.length>4?w.replace(/(es|s)$/,""):w); }
+function localSearch(q, sid){
+  const tk=tokens(q); if(!tk.length) return [];
+  return TOPICS.map(t=>{
+    const title=t.title.toLowerCase(), sum=t.summary.toLowerCase(), kw=t.kw.toLowerCase(), g=t.group.toLowerCase();
+    let sc=0;
+    for(const w of tk){ if(title.includes(w)) sc+=4; if(kw.includes(w)) sc+=3; if(sum.includes(w)) sc+=1; if(g.includes(w)) sc+=1; }
+    if(sc && sid && t.sid===sid) sc+=2;
+    return {t,sc};
+  }).filter(x=>x.sc>0 && (!sid || x.t.sid===sid || x.sc>=4)).sort((a,b)=>b.sc-a.sc).slice(0,6).map(x=>x.t);
+}
+
+/* ---------- Claude (sample capability) ---------- */
+let sampleReady = (window.claude && typeof window.claude.use==="function") ? window.claude.use("sample").catch(()=>null) : Promise.resolve(null);
+let aiOff = false;
+const ERR = {
+  not_granted:"Claude isn't switched on for this page, so you're seeing curriculum topics and practice questions only.",
+  sampling_disabled:"Claude isn't available on this account, so you're seeing curriculum topics and practice questions only.",
+  rate_limited:"Too many searches in a short time. Wait a minute, then search again.",
+  session_expired:"You've been signed out of Claude. Sign in again, then search again.",
+  refused:"Claude can't answer that question. Try asking it a different way.",
+  empty_completion:"No answer came back. Try a shorter or clearer question.",
+  prompt_too_large:"That question is too long. Make it shorter and search again."
+};
+const HIDE_CODES = new Set(["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"]);
+
+/* ---------- State ---------- */
+const state = { subject:"", lang:store.get("tsebo-lang","English"), query:"", parsed:null, sections:[], open:new Set(), ctl:null, busy:false, matches:[] };
+
+/* ---------- UI setup ---------- */
+$("#lang").value = state.lang;
+$("#lang").addEventListener("change", e=>{ state.lang=e.target.value; store.set("tsebo-lang",state.lang); });
+
+function renderChips(){
+  const c=$("#chips"); c.innerHTML="";
+  [{id:"",short:"All subjects"}, ...SUBJECTS].forEach(s=>{
+    const b=document.createElement("button"); b.type="button"; b.className="chip"; b.textContent=s.short;
+    b.setAttribute("aria-pressed", String(state.subject===s.id));
+    b.onclick=()=>{ state.subject=s.id; renderChips(); };
+    c.appendChild(b);
+  });
+}
+renderChips();
+["What is Google?","Theorem of Pythagoras","Photosynthesis","Apartheid laws","Factorising","Series and parallel circuits","Debtors journal","Figures of speech"].forEach(q=>{
+  const b=document.createElement("button"); b.type="button"; b.textContent=q; b.onclick=()=>{ $("#q").value=q; runSearch(q); };
+  $("#tries").appendChild(b);
+});
+
+function setTab(name){
+  const s=name==="search";
+  $("#tab-search").setAttribute("aria-selected",String(s)); $("#tab-browse").setAttribute("aria-selected",String(!s));
+  $("#view-search").classList.toggle("hidden",!s); $("#view-browse").classList.toggle("hidden",s);
+}
+$("#tab-search").onclick=()=>setTab("search");
+$("#tab-browse").onclick=()=>setTab("browse");
+
+$("#searchForm").addEventListener("submit", e=>{ e.preventDefault(); const q=$("#q").value.trim(); if(q) runSearch(q); else $("#q").focus(); });
+
+/* ---------- Recent ---------- */
+function renderRecent(){
+  const r=store.get("tsebo-recent",[]);
+  $("#recentWrap").classList.toggle("hidden", r.length===0);
+  $("#recent").innerHTML = r.map(q=>`<li><button type="button" data-q="${esc(q)}"><span class="t-title">${esc(q)}</span></button></li>`).join("");
+}
+$("#recent").addEventListener("click", e=>{ const b=e.target.closest("button[data-q]"); if(b){ $("#q").value=b.dataset.q; runSearch(b.dataset.q);} });
+function addRecent(q){ let r=store.get("tsebo-recent",[]).filter(x=>x.toLowerCase()!==q.toLowerCase()); r.unshift(q); store.set("tsebo-recent",r.slice(0,6)); }
+
+/* ---------- Parsing Claude's answer ---------- */
+const LABEL = /^\s*[#*>\s]*(TITLE|SUBJECT|TOPIC|EXPLAIN|EXPLANATION|KEY WORDS|KEYWORDS|EXAMPLE|QUESTIONS)\s*\**\s*:\s*\**\s*(.*)$/i;
+function parseAnswer(text){
+  const o={title:"",subject:"",topic:"",explain:"",keywords:[],example:"",questions:[]};
+  let sec=null, q=null, inMemo=false;
+  for(const line of text.split("\n")){
+    const m=line.match(LABEL);
+    if(m){
+      let k=m[1].toUpperCase(); const rest=m[2].replace(/\*+$/,"").trim();
+      if(k==="EXPLANATION") k="EXPLAIN"; if(k==="KEYWORDS") k="KEY WORDS";
+      if(k==="TITLE"||k==="SUBJECT"||k==="TOPIC"){ o[k.toLowerCase()]=rest; sec=null; continue; }
+      sec=k; if(rest) line2(rest); continue;
+    }
+    line2(line);
+  }
+  function line2(line){
+    if(sec==="EXPLAIN") o.explain+=line+"\n";
+    else if(sec==="EXAMPLE") o.example+=line+"\n";
+    else if(sec==="KEY WORDS"){
+      const t=line.replace(/^\s*[-\u2022*]\s*/,"").trim(); if(!t) return;
+      const i=t.indexOf(":"); if(i>0) o.keywords.push([t.slice(0,i).replace(/\*/g,"").trim(), t.slice(i+1).trim()]);
+      else o.keywords.push([t.replace(/\*/g,""),""]);
+    }
+    else if(sec==="QUESTIONS"){
+      const qm=line.match(/^\s*(?:\d+(?:[.,]\d+)*[.)]?\s*)?\**Q\d*(?:[.,]\d+)*\**\s*[:.]\s*(.*)$/i);
+      const mm=line.match(/^\s*\**(MEMO|ANSWER)\**\s*:\s*(.*)$/i);
+      if(qm){ q={q:qm[1].replace(/^\*+\s*/,""),memo:"",marks:null}; o.questions.push(q); inMemo=false; }
+      else if(mm && q){ q.memo=mm[2].replace(/^\*+\s*/,""); inMemo=true; }
+      else if(q){ if(inMemo) q.memo+=(q.memo?"\n":"")+line; else if(line.trim()) q.q+="\n"+line; }
+    }
+  }
+  o.questions.forEach(x=>{
+    const mk=x.q.match(/[\[(]\s*(\d+)\s*(?:marks?)?\s*[\])]\s*$/i);
+    if(mk){ x.marks=+mk[1]; x.q=x.q.slice(0,mk.index).trim(); }
+    x.q=x.q.trim(); x.memo=x.memo.trim();
+  });
+  return o;
+}
+
+/* ---------- Rendering ---------- */
+function renderMeta(subject, topic){
+  const tags=[]; if(subject) tags.push(subject); if(topic && topic!=="-") tags.push(topic);
+  $("#ansMeta").innerHTML = tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("");
+}
+function renderBody(p, streaming){
+  let h="";
+  if(p.explain.trim()) h+=blocks(p.explain);
+  if(p.keywords.length) h+=`<h3>Key words</h3><dl class="kw">${p.keywords.map(([w,d])=>`<dt>${inline(w)}</dt><dd>${inline(d)}</dd>`).join("")}</dl>`;
+  if(p.example.trim()) h+=`<h3>Example</h3><div class="example">${blocks(p.example)}</div>`;
+  if(!h && streaming) h=`<p class="thinking">Thinking</p>`;
+  $("#ansBody").innerHTML=h;
+}
+function renderExam(){
+  const secs=state.sections.filter(s=>s.questions.length || s.pending);
+  $("#ansExamWrap").classList.toggle("hidden", secs.length===0);
+  $("#ansExam").innerHTML = secs.map((s,si)=>{
+    const n=si+1, total=s.questions.reduce((a,q)=>a+(q.marks||0),0);
+    const qs = s.questions.map((q,qi)=>{
+      const key=s.id+"-"+qi, open=state.open.has(key), memo=q.memo;
+      return `<div class="q"><div class="q-row"><span class="q-num">${n}.${qi+1}</span><div class="q-text">${inline(q.q)}</div><span class="q-marks">${q.marks?"("+q.marks+")":""}</span></div>`+
+        (memo? `<button type="button" class="memo-btn" data-key="${key}" aria-expanded="${open}">${open?"Hide answer":"Show answer"}</button><div class="memo"${open?"":" hidden"}><b class="mlabel">Memo</b>${inline(memo)}</div>`:"")+`</div>`;
+    }).join("");
+    return `<div class="qsec"><div class="qsec-h"><span>Question ${n}</span>${s.source?`<span class="t-sub">${esc(s.source)}</span>`:""}</div>${qs}${s.pending&&!s.questions.length?'<p class="thinking">Writing questions</p>':""}${total?`<div class="total">[${total}]</div>`:""}</div>`;
+  }).join("");
+}
+$("#ansExam").addEventListener("click", e=>{
+  const b=e.target.closest(".memo-btn"); if(!b) return;
+  const k=b.dataset.key; state.open.has(k)?state.open.delete(k):state.open.add(k);
+  const memo=b.nextElementSibling; const open=state.open.has(k);
+  memo.hidden=!open; b.setAttribute("aria-expanded",String(open)); b.textContent=open?"Hide answer":"Show answer";
+});
+
+function renderMatches(list){
+  $("#matches").innerHTML = list.length ? list.map(t=>`<li><button type="button" data-title="${esc(t.title)}" data-sid="${t.sid}"><span class="t-title">${esc(t.title)}</span><span class="t-sub">${esc(t.sname)}, ${esc(t.group)}</span></button></li>`).join("")
+    : `<li class="empty" style="border:0">No exact topic match. The answer will link it to the closest subject.</li>`;
+}
+$("#matches").addEventListener("click", e=>{ const b=e.target.closest("button[data-title]"); if(b){ openTopic(b.dataset.sid,b.dataset.title); } });
+
+function setStatus(html, cls){ $("#status").innerHTML = html? `<p class="note ${cls||""}">${html}</p>` : ""; }
+function setActions(mode){
+  const a=$("#actions"); a.innerHTML="";
+  const mk=(label,fn,ghost=true)=>{ const b=document.createElement("button"); b.type="button"; b.className="btn"+(ghost?" ghost":""); b.textContent=label; b.onclick=fn; a.appendChild(b); return b; };
+  if(mode==="busy") mk("Stop", ()=>state.ctl&&state.ctl.abort());
+  else if(mode==="ai"){ mk("Explain more simply", ()=>runSearch(state.query,{simple:true})); mk("More exam questions", moreQuestions); }
+  else if(mode==="retry") mk("Search again", ()=>runSearch(state.query));
+}
+function busy(on){ state.busy=on; $("#answer").setAttribute("aria-busy",String(on)); $("#goBtn").disabled=on; }
+
+/* ---------- Search ---------- */
+function buildPrompt(q, opts){
+  const subj = SUBJECTS.find(s=>s.id===state.subject);
+  const topics = state.matches.map(t=>`${t.sname} (${t.group}): ${t.title}`).join("; ") || "none found";
+  return `You are a patient, encouraging teacher for Grade 9 learners in Limpopo, South Africa, following the CAPS curriculum.
+
+Learner's search: "${q}"
+Subject chosen by the learner: ${subj?subj.name:"any"}
+Possibly matching CAPS Grade 9 topics: ${topics}
+Write the content in: ${state.lang}. Keep the section labels below exactly in English.
+
+Rules:
+- Explain clearly for a 14 to 15 year old. Short sentences, everyday words, ${opts.simple?"and explain it even more simply than usual, using an everyday comparison from home or school life":"and enough depth for a Grade 9 test"}.
+- Use South African context where natural (rands, Limpopo towns, local examples).
+- Use a decimal comma (3,5) like South African exam papers. Write maths in plain text (x\u00b2, \u221a, \u00f7, 3/4). Never use LaTeX.
+- If the search is outside the Grade 9 curriculum (for example "What is Google?"), still explain it well and connect it to the closest Grade 9 subject if there is one.
+- Mark key words with **bold**.
+
+Reply in exactly this format and nothing else:
+TITLE: <short title>
+SUBJECT: <Grade 9 subject name, or General knowledge>
+TOPIC: <CAPS topic name, or ->
+EXPLAIN:
+<2 to 4 short paragraphs; bullet lines start with "- ">
+KEY WORDS:
+- <word>: <meaning>
+(3 to 5 lines)
+EXAMPLE:
+<one worked example or real-life example>
+QUESTIONS:
+Q: <exam-style question> [marks]
+MEMO: <model answer; for calculations show each step>
+(Write 5 questions in the style of Limpopo/CAPS Grade 9 exam papers, from easy recall to harder application, about 15 marks in total.)`;
+}
+
+async function runSearch(q, opts={}){
+  if(state.ctl) state.ctl.abort();
+  setTab("search");
+  state.query=q; state.open.clear();
+  if(!opts.simple) addRecent(q); renderRecent();
+  state.matches = localSearch(q, state.subject);
+  renderMatches(state.matches);
+  $("#results").classList.remove("hidden");
+  $("#asked").innerHTML = `You asked: <mark class="swipe">${esc(q)}</mark>`;
+  $("#ansTitle").textContent = opts.simple ? "Explaining it more simply" : q;
+  renderMeta("", ""); state.sections=[]; renderExam();
+  $("#ansBody").innerHTML=`<p class="thinking">Thinking</p>`; setStatus("");
+  busy(true); setActions("busy");
+  if(window.matchMedia("(max-width:820px)").matches) $("#results").scrollIntoView({behavior:"smooth",block:"start"});
+
+  const sample = aiOff ? null : await sampleReady;
+  if(!sample){ busy(false); return fallback(q); }
+
+  const ctl = new AbortController(); state.ctl=ctl;
+  const sec={id:"s"+Date.now(), questions:[], pending:true}; state.sections=[sec];
+  const paint = text => {
+    const p=parseAnswer(text); state.parsed=p;
+    if(p.title) $("#ansTitle").textContent=p.title;
+    renderMeta(p.subject,p.topic); renderBody(p,true);
+    sec.questions=p.questions; renderExam();
+  };
+  try{
+    const res = await sample(buildPrompt(q,opts), { modelTier:"quick", signal:ctl.signal, cache: opts.simple?false:true, onText:({text})=>paint(text) });
+    paint(res.text); sec.pending=false; renderBody(state.parsed,false); renderExam();
+    if(!state.parsed.explain.trim() && !state.parsed.questions.length) $("#ansBody").innerHTML=blocks(res.text);
+    setStatus(res.truncated?"The answer was cut short. Search a smaller part of the topic for the rest.":"");
+    setActions("ai");
+  }catch(e){
+    sec.pending=false;
+    if(e && e.code==="cancelled"){ if(state.ctl===ctl){ renderBody(state.parsed||parseAnswer(""),false); renderExam(); setStatus("Stopped."); setActions("ai"); } return; }
+    if(e && HIDE_CODES.has(e.code)){ aiOff=true; busy(false); return fallback(q, ERR[e.code]||ERR.not_granted); }
+    if(e && e.code==="refused"){ $("#ansBody").innerHTML=""; state.sections=[]; renderExam(); }
+    else if(e && e.text){ paint(e.text); renderBody(state.parsed,false); }
+    else $("#ansBody").innerHTML="";
+    setStatus(esc(ERR[e&&e.code] || "Couldn't reach Claude. Check your connection and search again."), "err");
+    setActions("retry");
+  }finally{ if(state.ctl===ctl){ state.ctl=null; busy(false); } }
+}
+
+async function moreQuestions(){
+  const sample = aiOff ? null : await sampleReady; if(!sample) return;
+  const have = state.sections.flatMap(s=>s.questions.map(q=>q.q)).join("\n- ");
+  const ctl=new AbortController(); state.ctl=ctl;
+  const sec={id:"s"+Date.now(), questions:[], pending:true, source:"Extra practice"}; state.sections.push(sec); renderExam();
+  busy(true); setActions("busy"); setStatus("");
+  const topic = (state.parsed && state.parsed.title) || state.query;
+  const prompt = `You write exam questions for Grade 9 learners in Limpopo, South Africa (CAPS curriculum).
+Topic: "${topic}" (learner searched: "${state.query}").
+Write in: ${state.lang}. Keep the labels Q: and MEMO: in English.
+Write 5 NEW exam-style questions that are different from these:
+- ${have || "(none yet)"}
+Mix question types (one-word, explain, calculate or apply, a short scenario). Use a decimal comma and plain-text maths, no LaTeX.
+Reply with only lines in this format:
+Q: <question> [marks]
+MEMO: <model answer; show steps for calculations>`;
+  try{
+    const res = await sample(prompt, { modelTier:"quick", signal:ctl.signal, cache:false, onText:({text})=>{ sec.questions=parseAnswer("QUESTIONS:\n"+text).questions; renderExam(); } });
+    sec.questions=parseAnswer("QUESTIONS:\n"+res.text).questions; sec.pending=false; renderExam();
+    setActions("ai");
+  }catch(e){
+    sec.pending=false; renderExam();
+    if(e && e.code==="cancelled"){ setStatus("Stopped."); setActions("ai"); return; }
+    if(e && HIDE_CODES.has(e.code)) aiOff=true;
+    setStatus(esc(ERR[e&&e.code] || "Couldn't reach Claude. Try again."), "err"); setActions("ai");
+  }finally{ if(state.ctl===ctl){ state.ctl=null; busy(false); } }
+}
+
+function fallback(q, msg){
+  const top = state.matches[0];
+  const note = msg || "Full explanations come from Claude, which isn't available where this page is open. Here's what your curriculum says.";
+  if(top){
+    $("#ansTitle").textContent = top.title;
+    renderMeta(top.sname, top.group);
+    $("#ansBody").innerHTML = `<p>${esc(top.summary)}</p>` + (state.matches.length>1?`<h3>Related topics</h3><ul>${state.matches.slice(1).map(t=>`<li>${esc(t.title)}: ${esc(t.summary)}</li>`).join("")}</ul>`:"");
+    const pq = PRACTICE[top.sid]||[];
+    state.sections = pq.length ? [{id:"p-"+top.sid, source:"Practice questions, "+top.sname, questions:pq.map(([qq,mk,memo])=>({q:qq,marks:mk,memo}))}] : [];
+  }else{
+    $("#ansTitle").textContent = "No topic found";
+    renderMeta("","");
+    $("#ansBody").innerHTML = `<p>Nothing in the Grade 9 curriculum matched \u201c${esc(q)}\u201d. Try one or two key words, like \u201cfractions\u201d or \u201ccells\u201d, or open Browse curriculum.</p>`;
+    state.sections=[];
+  }
+  renderExam(); setStatus(esc(note)); setActions("");
+}
+
+function openTopic(sid, title){
+  state.subject=sid; renderChips();
+  $("#q").value=title; runSearch(title);
+}
+
+/* ---------- Browse ---------- */
+function renderBrowse(){
+  $("#jump").innerHTML = SUBJECTS.map(s=>`<a class="chip" href="#subj-${s.id}" style="text-decoration:none;color:inherit">${esc(s.short)}</a>`).join("");
+  $("#subjects").innerHTML = SUBJECTS.map(s=>{
+    const n=s.groups.reduce((a,g)=>a+g.topics.length,0), pq=PRACTICE[s.id]||[];
+    const groups=s.groups.map(g=>`<div class="grp"><h3>${esc(g.label)}</h3><ul class="topics">${g.topics.map(t=>`<li><button type="button" data-sid="${s.id}" data-title="${esc(t[0])}"><span class="t-title">${esc(t[0])}</span><span class="t-sub">${esc(t[1])}</span></button></li>`).join("")}</ul></div>`).join("");
+    const practice = pq.length? `<details class="practice"><summary>Practice questions (${pq.length})</summary><div class="paper" style="border:0">${pq.map((p,i)=>`<div class="q"><div class="q-row"><span class="q-num">${i+1}</span><div class="q-text">${esc(p[0])}</div><span class="q-marks">(${p[1]})</span></div><details style="margin-left:3.1rem"><summary class="memo-btn" style="margin:0;list-style:none">Show answer</summary><div class="memo" style="margin-left:0">${esc(p[2])}</div></details></div>`).join("")}</div></details>` : "";
+    return `<section class="subj" id="subj-${s.id}"><h2>${esc(s.name)}</h2><p>${n} topics. Tap a topic to get an explanation and exam questions.</p>${groups}${practice}</section>`;
+  }).join("");
+}
+renderBrowse();
+$("#subjects").addEventListener("click", e=>{ const b=e.target.closest("button[data-title]"); if(b){ openTopic(b.dataset.sid,b.dataset.title); window.scrollTo({top:0,behavior:"smooth"}); } });
+
+renderRecent();
+</script>
+</body>
+</html>
